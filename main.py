@@ -78,11 +78,13 @@ def classify_pdf(filename, folder_path):
 
 def already_processed(filename):
     filename = os.path.basename(filename)
-    return filename.startswith("4x6_") or filename.startswith("letter_")
+    base, ext = os.path.splitext(filename)
+    return base.endswith("_4x6") or base.endswith("_letter")
 
 
 def process_file(filepath):
     folder_path, filename = os.path.split(filepath)
+    base, ext = os.path.splitext(filename)
 
     if already_processed(filename):
         return
@@ -93,7 +95,7 @@ def process_file(filepath):
         tag = "4x6"  # 默认非 PDF 文件标记为 4x6
 
     if tag:
-        new_filename = f"{tag}_{filename}"
+        new_filename = f"{base}_{tag}{ext}"
         new_filepath = os.path.join(folder_path, new_filename)
         os.rename(filepath, new_filepath)
         print(f"已将 '{filename}' 重命名为 '{new_filename}'")
