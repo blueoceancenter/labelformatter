@@ -1,0 +1,17 @@
+[project]
+name = "labelformatter"
+version = "0.1.0"
+description = "Python script to rename PDF files based on content ratio"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow>=11.1.0",
+    "pymupdf>=1.25.4",
+    "pypdf2>=3.0.1",
+    "watchdog>=6.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+]
