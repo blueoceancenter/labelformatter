@@ -112,33 +112,45 @@ def rename_pdfs(folder_path):
         process_file(filepath)
 
 
+def is_system_generated(path):
+    return os.path.basename(path).endswith(".png")
+
+
 class FileMonitor(FileSystemEventHandler):
     def on_created(self, event):
-        if not event.is_directory and not already_processed(event.src_path):
+        if (
+            not event.is_directory
+            and not already_processed(event.src_path)
+            and not is_system_generated(event.src_path)
+        ):
             print(f"检测到新文件: {event.src_path}")
             # Add a small delay to ensure the file is fully written
             time.sleep(1)
             process_file(event.src_path)
 
     def on_moved(self, event):
-        if not event.is_directory and not already_processed(event.dest_path):
+        if (
+            not event.is_directory
+            and not already_processed(event.dest_path)
+            and not is_system_generated(event.dest_path)
+        ):
             print(f"检测到文件移动: {event.dest_path}")
             # Add a small delay to ensure the file is fully written
             time.sleep(1)
             process_file(event.dest_path)
 
 
-def monitor_folders(folders):
+def monitor_folders(folders, recursive=False):
     observer = Observer()
     event_handler = FileMonitor()
 
     for folder in folders:
-        print(f"开始监控文件夹: {folder}")
-        observer.schedule(event_handler, folder, recursive=False)
+        print(f"开始监控文件夹: {folder}" + (" (包括子文件夹)" if recursive else ""))
+        observer.schedule(event_handler, folder, recursive=recursive)
 
         # Process existing files first
         print(f"处理现有文件...")
-        rename_pdfs(folder)
+        process_files_recursive(folder, recursive)
 
     observer.start()
 
@@ -146,8 +158,20 @@ def monitor_folders(folders):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
+        print("监控已停止")
         observer.stop()
     observer.join()
+
+
+def process_files_recursive(folder_path, recursive=False):
+    """Process files in the folder, with optional recursive processing."""
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+
+        if os.path.isfile(item_path):
+            process_file(item_path)
+        elif recursive and os.path.isdir(item_path):
+            process_files_recursive(item_path, recursive)
 
 
 if __name__ == "__main__":
@@ -161,6 +185,11 @@ if __name__ == "__main__":
         required=True,
         help="Paths to the folders to monitor",
     )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Monitor subfolders recursively",
+    )
     args = parser.parse_args()
 
-    monitor_folders(args.folders)
+    monitor_folders(args.folders, args.recursive)
