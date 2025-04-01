@@ -112,28 +112,21 @@ def rename_pdfs(folder_path):
         process_file(filepath)
 
 
-def is_system_generated(path):
-    return os.path.basename(path).endswith(".png")
+# 系统生成的label文件, 不需要识别处理, 直接tag为4x6的热敏格式
+# def is_system_generated(path):
+#     return os.path.basename(path).endswith(".png")
 
 
 class FileMonitor(FileSystemEventHandler):
     def on_created(self, event):
-        if (
-            not event.is_directory
-            and not already_processed(event.src_path)
-            and not is_system_generated(event.src_path)
-        ):
+        if not event.is_directory and not already_processed(event.src_path):
             print(f"检测到新文件: {event.src_path}")
             # Add a small delay to ensure the file is fully written
             time.sleep(1)
             process_file(event.src_path)
 
     def on_moved(self, event):
-        if (
-            not event.is_directory
-            and not already_processed(event.dest_path)
-            and not is_system_generated(event.dest_path)
-        ):
+        if not event.is_directory and not already_processed(event.dest_path):
             print(f"检测到文件移动: {event.dest_path}")
             # Add a small delay to ensure the file is fully written
             time.sleep(1)
